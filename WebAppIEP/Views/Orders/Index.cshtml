@@ -1,0 +1,77 @@
+﻿@model PagedList.IPagedList<xx0000xWebAppIEP.Models.Order>
+@using xx0000xWebAppIEP.Models
+@using Microsoft.AspNet.Identity
+@using Microsoft.AspNet.Identity.EntityFramework
+@using PagedList.Mvc;
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>My Orders</h2>
+
+<p class="text-primary">
+    Purchase more Tokens! <br/>
+    <a id="c-mobile-payment-widget" href="http://stage.centili.com/widget/WidgetModule?api=0bd89203dec6f4df9488eceafdeb1a22&clientId=@User.Identity.GetUserId()" >
+        <img src="https://www.centili.com/images/centili-widget-button.png" />
+    </a>
+</p>
+<table class="table">
+    <tr>
+        <th>
+            Transaction ID
+        </th>
+        <th>
+            Order Time
+        </th>
+        <th>
+            Number of Tokens
+        </th>
+        <th>
+            Price
+         </th>
+        <th>
+            Status
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.transactionID)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.OrderTime)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.NoTokens)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Price)
+        </td>
+        <td>
+
+            @if (item.Status==null) {
+                @:PENDING
+            } else if (item.Status==true) {
+                @:SUCCESS
+            } else if (item.Status==false) {
+                @:FAILED
+            }
+          
+        </td>
+        <td>           
+            @Html.ActionLink("Details", "Details", new { id=item.Id }) 
+            
+        </td>
+    </tr>
+}
+
+</table>
+
+<br />
+    Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+    @Html.PagedListPager(Model, page => Url.Action("Index",
+    new { page }))

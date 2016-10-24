@@ -1,0 +1,19 @@
+﻿@model xx0000xWebAppIEP.Models.Order
+
+@{
+    ViewBag.Title = "Purchase More";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>PurchaseMore</h2>
+
+<a id="c-mobile-payment-widget" href="http://stage.centili.com/widget/WidgetModule?api=0bd89203dec6f4df9488eceafdeb1a22">
+    <img src="https://www.centili.com/images/centili-widget-button.png" />
+</a>
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

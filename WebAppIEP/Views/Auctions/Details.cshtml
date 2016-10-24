@@ -1,0 +1,357 @@
+﻿@model xx0000xWebAppIEP.Models.Auction
+@using xx0000xWebAppIEP.Models
+@using Microsoft.AspNet.Identity
+@using Microsoft.AspNet.Identity.EntityFramework
+@using System;
+@using System.Collections.Generic;
+@using System.Data;
+@using System.Data.Entity;
+@using System.Linq;
+@using System.Net;
+@using System.Web;
+@using System.Web.Mvc;
+
+@{
+    ViewBag.Title = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Details</h2>
+<div class="row">
+<div class="col-sm-6 col-md-6 col-lg-6" style="margin-bottom:20px; font-size:medium;">
+    <div class="text-center">
+        <h3>@Html.ActionLink(Model.ProductName, "Details", "Auctions", new { id = Model.Id }, new { }) </h3>
+    </div>
+    <br />
+    <div class="row text-center" style="padding:10px;">
+        <img class="img-thumbnail img-responsive" src="data:image;base64,@System.Convert.ToBase64String(Model.Image)" /> <br />
+    </div>
+    @if (Model.Status == 2)
+    {
+        <div id="timer-@Model.Id" class="text-success text-center" style="font-size:x-large;"></div>
+    }
+    
+    <div class="text-center">
+        <div class="text-success" style="font-size:larger;">
+            <div>Price:</div>
+            <div>@Html.DisplayFor(modelItem => Model.StartingPrice)</div>
+            <div> + </div>
+            <div id="priceInc-@Model.Id">@Html.DisplayFor(modelItem => Model.PriceInc)</div>
+
+        </div>
+        @if (Model.Status != 2) {
+            <div  class="text-danger">
+            @switch (Model.Status)
+            {
+                case -1: @:DRAFT
+                    break;
+
+                case 1: @:READY
+                    break;
+
+                case 2: @:OPEN
+                    break;
+
+                case 3: @:SOLD
+                    break;
+
+                case 4: @:EXPIRED.
+                    break;
+
+                default: @:ERROR
+                    break;
+            }
+            </div>
+
+        }
+        Last Bidder:
+        @if (Model.AspNetUser != null)
+        {
+            <div id="email-@Model.Id">@Html.DisplayFor(modelItem => Model.AspNetUser.Email)</div> <br />
+        }
+        else
+        {
+            <div id="email-@Model.Id">N/A</div> <br />
+        }
+
+
+
+        @Html.HiddenFor(model => Model.RowVersion, new { id = "rowV-" + Model.Id })
+
+        @if (Model.Status == 2 && User.Identity.IsAuthenticated && !User.IsInRole("Admin"))
+        {
+            <br />
+                    <input type="button" value="Bid Now" id="bid-@Model.Id" class="btn btn-success" />
+        }
+        @if (Model.Status == 1 && User.IsInRole("Admin"))
+        {            
+             <br />
+             <div class="text-center">
+             @using (Html.BeginForm("Open", "Auctions", new { id = Model.Id }))
+                 {
+                   @Html.AntiForgeryToken()
+                    <input type="submit" value="Open" class="btn btn-info" />
+                }
+            </div>
+
+        }
+    </div>
+
+
+
+</div>
+
+<div class="col-sm-6 col-md-6 col-lg-6" style="margin-bottom:20px; font-size:medium;">
+@if (User.IsInRole("Admin"))
+{
+    <div class="row">
+        <span>Duration : @Html.DisplayFor(modelItem => Model.Duration)</span> <br />
+        <span>Starting Price : @Html.DisplayFor(modelItem => Model.StartingPrice)</span> <br />
+        <span>Creation Time : @Html.DisplayFor(modelItem => Model.CreationDT)</span> <br />
+        <span>Opening Time : @Html.DisplayFor(modelItem => Model.OpeningDT)</span> <br />
+        <span>Closing Time : @Html.DisplayFor(modelItem => Model.ClosingDT)</span> <br />
+    </div>
+}
+    <div class="row">
+        <table class="table table-striped">
+            <tr><th>Bidders</th><th>Amount</th></tr>
+            <tr>              
+                <td id="row1a"></td>
+                <td id="row1b"></td>
+            </tr>
+            <tr>
+                <td id="row2a"></td>
+                <td id="row2b"></td>
+            </tr>
+            <tr>
+                <td id="row3a"></td>
+                <td id="row3b"></td>
+
+            </tr>
+            <tr>
+                <td id="row4a"></td>
+                <td id="row4b"></td>
+
+            </tr>
+            <tr>
+                <td id="row5a"></td>
+                <td id="row5b"></td>
+            </tr>
+            <tr>
+                <td id="row6a"></td>
+                <td id="row6b"></td>
+            </tr>
+            <tr>
+                <td id="row7a"></td>
+                <td id="row7b"></td>
+            </tr>
+            <tr>
+                <td id="row8a"></td>
+                <td id="row8b"></td>
+            </tr>
+            <tr>
+                <td id="row9a"></td>
+                <td id="row9b"></td>
+            </tr>
+            <tr>
+                <td id="row10a"></td>
+                <td id="row10b"></td>
+            </tr>
+            
+        </table>
+
+
+
+    </div>
+
+</div>
+</div>
+
+    <p>
+        @if (User.IsInRole("Admin"))
+        {
+            @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) @:|
+    }
+
+        @Html.ActionLink("Back to List", "Index")
+    </p>
+
+
+    @section scripts {
+        <!--Script references. -->
+        <!--The jQuery library is required and is referenced by default in _Layout.cshtml. -->
+        <!--Reference the SignalR library. -->
+        <script src="~/Scripts/jquery.signalR-2.2.1.min.js"></script>
+        <!--Reference the autogenerated SignalR hub script. -->
+        <script src="~/signalr/hubs"></script>
+        <!--SignalR script to update the chat page and send messages.-->
+        <script>
+
+            var arrayAucId = new Array();
+            var arrayAucTime = new Array();
+            var numberAuc = 0;
+
+            function padNum(str) {
+                return ('0' + str).slice(-2);
+            }
+
+
+            @if (Model.Status == 2)
+            {
+                DateTime closing = (DateTime)Model.ClosingDT;
+                TimeSpan diff = closing.Subtract(DateTime.Now.ToUniversalTime());
+                int d = (int)Math.Floor(diff.TotalSeconds);
+
+                   @:arrayAucId.push(@Model.Id);
+                                                                                                       @:arrayAucTime.push(@d);
+                                                                                                       @:numberAuc++;
+
+
+            }
+
+
+            @{
+
+
+                ApplicationDbContext db = new ApplicationDbContext();
+                List<Offer> offers = db.Offers.Include(offer => offer.AspNetUser).Where(offer => offer.AuctionId == Model.Id).OrderByDescending(offer => offer.OfferTime).ToList();
+
+                if (offers.Count() < 10)
+                {
+                    offers = offers.Take(offers.Count()).ToList();
+                    for (int i = 0; i < offers.Count; i++) {
+                        @:var p=@i;
+                        @:p=p+1;
+                        @:$('#row'+p+'a').html("@offers.ElementAt(i).AspNetUser.Email");
+                        @:$('#row'+p+'b').html("@offers.ElementAt(i).Quantity");
+                         }
+                }
+                else {
+                    offers = offers.Take(10).ToList();
+                    for (int i = 0; i < offers.Count; i++)
+                    {
+                         @:var p=@i;
+                        @:p=p+1;
+                        @:$('#row'+p+'a').html("@offers.ElementAt(i).AspNetUser.Email");
+                        @:$('#row'+p+'b').html("@offers.ElementAt(i).Quantity");
+                                                                                                        }
+                }
+
+
+            }
+
+
+
+            var intervalID = setInterval(function () {
+                for (var i = 0; i < numberAuc; i++) {
+                    var ss = arrayAucTime[i];
+
+                    if (ss < 0) {
+                        $('#timer-' + arrayAucId[i]).html("CLOSED");
+                        $('#timer-' + arrayAucId[i]).removeClass("text-success").addClass("text-danger");
+                    }
+                    else {
+                        var mm = Math.floor(ss / 60);
+                        ss = ss % 60;
+                        var hh = Math.floor(mm / 60)
+                        mm = mm % 60;
+
+                        var timeS = padNum(hh) + ':' + padNum(mm) + ':' + padNum(ss);
+
+                        $('#timer-' + arrayAucId[i]).html(timeS);
+
+                        arrayAucTime[i] = arrayAucTime[i] - 1;
+                    }
+
+
+                }
+            }, 1000);
+
+
+            $(function () {
+                // Reference the auto-generated proxy for the hub.
+                var bids = $.connection.myHub;
+                // Create a function that the hub can call back to display messages.
+                bids.client.bidOutcome = function (username, auction, priceInc, rowVersion, aucExtended) {
+
+                    $('#email-' + auction).html(username);
+                    $('#priceInc-' + auction).html(priceInc);
+                    $('#rowV-' + auction).val(rowVersion);
+
+
+                    var aucID= @Model.Id;
+                    if (auction == aucID)
+                   {
+
+                    document.getElementById("row10a").innerHTML = document.getElementById("row9a").innerHTML;
+                    document.getElementById("row9a").innerHTML = document.getElementById("row8a").innerHTML;
+                    document.getElementById("row8a").innerHTML = document.getElementById("row7a").innerHTML;
+                    document.getElementById("row7a").innerHTML = document.getElementById("row6a").innerHTML;
+                    document.getElementById("row6a").innerHTML = document.getElementById("row5a").innerHTML;
+                    document.getElementById("row5a").innerHTML = document.getElementById("row4a").innerHTML;
+                    document.getElementById("row4a").innerHTML = document.getElementById("row3a").innerHTML;
+                    document.getElementById("row3a").innerHTML = document.getElementById("row2a").innerHTML;
+                    document.getElementById("row2a").innerHTML = document.getElementById("row1a").innerHTML;
+                    document.getElementById("row10b").innerHTML = document.getElementById("row9b").innerHTML;
+                    document.getElementById("row9b").innerHTML = document.getElementById("row8b").innerHTML;
+                    document.getElementById("row8b").innerHTML = document.getElementById("row7b").innerHTML;
+                    document.getElementById("row7b").innerHTML = document.getElementById("row6b").innerHTML;
+                    document.getElementById("row6b").innerHTML = document.getElementById("row5b").innerHTML;
+                    document.getElementById("row5b").innerHTML = document.getElementById("row4b").innerHTML;
+                    document.getElementById("row4b").innerHTML = document.getElementById("row3b").innerHTML;
+                    document.getElementById("row3b").innerHTML = document.getElementById("row2b").innerHTML;
+                    document.getElementById("row2b").innerHTML = document.getElementById("row1b").innerHTML;
+
+                    document.getElementById("row1a").innerHTML = username;
+                    document.getElementById("row1b").innerHTML = ( @Model.StartingPrice + priceInc -1);
+
+                }
+
+
+
+
+                if (aucExtended === "true") {
+                            //azuriranje!
+
+                            for (var i = 0; i < numberAuc; i++) {
+                                if (arrayAucId[i] == auction) {
+                                    arrayAucTime[i] = 10;
+                                }
+                            }
+
+                        }
+
+
+            };
+
+            bids.client.bidFailed = function () {
+                alert("Unfortunately your attempt to bid failed!");
+            };
+
+            bids.client.auctionOver = function () {
+                alert("Unfortunately this auction is closed!");
+            };
+
+            bids.client.insufFunds = function () {
+                alert("Unfortunately you have insufficient funds!");
+            };
+
+
+
+
+            // Start the connection.
+            $.connection.hub.start().done(function () {
+                $('[id^=bid-]').click(function () {
+
+
+
+                    var buttonId = $(this).attr('id');
+                    var aucID = buttonId.replace('bid-', '');
+                    var rowVersion = $('#rowV-' + aucID).val();
+                    bids.server.bidPlaced(aucID, rowVersion);
+                });
+            });
+            });
+
+        </script>
+    }

@@ -1,0 +1,54 @@
+﻿@model xx0000xWebAppIEP.Models.IndexViewModel
+@{
+    ViewBag.Title = "Manage";
+}
+
+<h2>@ViewBag.Title.</h2>
+
+<p class="text-success">@ViewBag.StatusMessage</p>
+<div>
+    <h4>Change your account settings</h4>
+    <hr />
+    <div class="panel-info">
+        <div class="panel-body text-success" style="font-size:medium;">
+           <div class="row">
+               <b>Email: </b>
+
+               @Model.Email [
+               @Html.ActionLink("Change your email", "ChangeEmail") ]
+           </div>
+                
+            <div class="row">
+                <b>Full Name: </b>
+
+                    @Model.FullName [
+                    @Html.ActionLink("Change your full name", "ChangeName") ]
+</div>   
+            <div class="row">
+                <b>Token Number: </b>
+
+                @Model.NoTokens [
+                @Html.ActionLink("Get more tokens", "Index", "Orders") ]
+            </div> 
+            <div class="row">
+                <b>Password: </b>
+
+                    [
+                    @if (Model.HasPassword)
+                    {
+                        @Html.ActionLink("Change your password", "ChangePassword")
+                    }
+                    else
+                    {
+                        @Html.ActionLink("Create", "SetPassword")
+                    }
+                    ]
+</div> 
+
+
+
+        </div>
+
+    </div>
+
+</div>

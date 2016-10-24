@@ -1,0 +1,108 @@
+﻿@model PagedList.IPagedList<xx0000xWebAppIEP.Models.Auction>
+@using xx0000xWebAppIEP.Models
+@using Microsoft.AspNet.Identity
+@using Microsoft.AspNet.Identity.EntityFramework
+@using PagedList.Mvc;
+@{
+    ViewBag.Title = "My Wins";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>My Wins</h2>
+
+
+<div class="row">
+    <!---->
+
+
+    @{ var numItems = 0;}
+    @foreach (var item in Model)
+    {
+        if (numItems % 3 == 0)
+        {
+            @:<div class="row" style="border-bottom:thin; border-top:thin; border-color:gainsboro;">
+        }
+
+        <div class="col-sm-4 col-md-4 col-lg-4" style="margin-bottom:20px; font-size:medium;">
+            <div class="text-center">
+                <h3>@Html.ActionLink(item.ProductName, "Details", "Auctions", new { id = item.Id }, new { }) </h3>
+            </div>
+            <br />
+            <div class="row text-center" style="padding:10px;">
+                <img class="img-thumbnail img-responsive" src="data:image;base64,@System.Convert.ToBase64String(item.Image)" /> <br />
+            </div>
+            
+            <div class="text-center">
+                <div class="text-success" style="font-size:larger;">
+                    <div>Price:</div>
+                    <div>@Html.DisplayFor(modelItem => item.StartingPrice)</div>
+                    <div> + </div>
+                    <div id="priceInc-@item.Id">@Html.DisplayFor(modelItem => item.PriceInc)</div>
+
+                </div>
+                <br/>
+                    <div  class="text-danger">
+                    @switch (item.Status)
+                    {
+                        case 2: @:OPEN
+                            break;
+
+                        case 3: @:SOLD
+                            break;
+
+                        case 4: @:EXPIRED.
+                            break;
+
+                        default: @:ERROR
+                            break;
+                    }
+                    </div>
+
+                 <br/>
+                Last Bidder:
+                @if (item.AspNetUser != null)
+                {
+                    <div id="email-@item.Id">@Html.DisplayFor(modelItem => item.AspNetUser.Email)</div> <br />
+                }
+                else
+                {
+                    <div id="email-@item.Id">N/A</div> <br />
+                }
+
+
+
+                @Html.HiddenFor(model => item.RowVersion, new { id = "rowV-" + item.Id })
+
+            </div>
+
+
+
+        </div>
+
+
+        if (numItems % 3 == 2)
+        {   @:</div>
+         }
+
+        numItems++;
+    }
+
+    @if (numItems % 3 != 0)
+    {        @:</div>
+         }
+
+
+
+
+    <!---->
+    </div>
+
+
+
+    <br />
+    Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+    @Html.PagedListPager(Model, page => Url.Action("Index",
+    new { page}))
+
+

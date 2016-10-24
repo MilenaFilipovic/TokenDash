@@ -1,0 +1,164 @@
+﻿@model PagedList.IPagedList<xx0000xWebAppIEP.Models.Auction>
+@using xx0000xWebAppIEP.Models
+@using Microsoft.AspNet.Identity
+@using Microsoft.AspNet.Identity.EntityFramework
+@using PagedList.Mvc;
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Auctions</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+
+<div class="row">
+
+<div class="col-sm-3 col-md-3 col-lg-3" >
+    <div class="row" >
+        <div class="panel panel-primary" >
+            <div class="panel-heading"><h4>Search</h4></div>
+            <div class="panel-body">
+                @using (Html.BeginForm())
+            {    <div class="form-group">
+                    @Html.Label("Search by product name: ") 
+                    @Html.TextBox("SearchString", ViewBag.CurrentSearch as string,  new { @class = "form-control" } )
+                    @Html.Label("Containing: ")
+                    <select name="searchType" class="form-control" selected="@ViewBag.CurrentSearchType">
+                        <option value="ANY" >Any words</option>
+                        <option value="ALL">All words</option>
+                    </select>
+                    @Html.Label("Search by status")
+                    <select class="form-control" name="statusList" selected="@ViewBag.CurrentStatus">
+                        <option value=""></option>
+                        <option value="READY">Ready</option> <!--SAMO ZA ADMINA!!!-->
+                        <option value="OPEN">Open</option>
+                        <option value="SOLD">Sold</option>
+                        <option value="EXPIRED">Expired</option>
+
+                    </select>
+                    
+                    @Html.Label("Min price ")
+                    <input type="number" class="form-control" id="minPrice" name="minPrice" min="0" data-bind="value:minPrice" step="1" value="@ViewBag.CurrentMin" />
+                    
+                    @Html.Label("Max price ")
+                    <input type="number" class="form-control" id="maxPrice" name="maxPrice" min="0" data-bind="value:maxPrice" step="1" value="@ViewBag.CurrentMax" />
+                    <br /><br />
+                    <input type="submit" value="Search" class="btn btn-primary btn-lg" />
+                </div>
+                    }
+
+                </div>
+        </div>
+    </div>
+
+</div>
+
+
+    <div class="col-sm-9 col-md-9 col-lg-9">
+        <!---->
+
+
+        @{ var numItems = 0;}
+        @foreach (var item in Model)
+        {
+            if (numItems % 3 == 0)
+            {
+                @:<div class="row">
+                }
+
+            <div class="col-sm-4 col-md-4 col-lg-4" style="margin-bottom:20px;">
+                <div class="text-center">
+                <h3>@Html.ActionLink(item.ProductName, "Details", "Auctions", new { id = item.Id }, new { }) </h3>
+                 </div>
+                <br />
+                <div class="row text-center" style="padding:10px;">
+                    <img class="img-thumbnail img-responsive" src="data:image;base64,@System.Convert.ToBase64String(item.Image)" /> <br />
+                 </div>   
+                    
+                    <span>Duration : @Html.DisplayFor(modelItem => item.Duration)</span> <br />
+
+                    <span>Starting Price : @Html.DisplayFor(modelItem => item.StartingPrice)</span> <br />
+                    <span>Creation Time : @Html.DisplayFor(modelItem => item.CreationDT)</span> <br />
+                    <span>Opening Time : @Html.DisplayFor(modelItem => item.OpeningDT)</span> <br />
+                    <span>Closing Time : @Html.DisplayFor(modelItem => item.ClosingDT)</span> <br />
+                    <span>
+                        Status : @switch (item.Status)
+                {
+
+                    case -1: @:DRAFT
+                    break;
+
+                    case 1: @:READY
+                    break;
+
+                    case 2: @:OPEN
+                    break;
+
+                    case 3: @:SOLD
+                    break;
+
+                    case 4: @:EXPIRED.
+                    break;
+
+                    default: @:ERROR
+                    break;
+                }
+                    </span> <br />
+                    <span>Price Increment : @Html.DisplayFor(modelItem => item.PriceInc)</span> <br />
+                   
+                    <br />
+                    @Html.ActionLink("Details", "Details", new { id = item.Id })
+                    @if (item.Status == 1)
+                {
+                        @:|
+                        @Html.ActionLink("Edit", "Edit", new { id = item.Id }) @:|
+                        @Html.ActionLink("Delete", "Delete", new { id = item.Id })
+                    }
+                    @if (item.Status == 1)
+                {
+                        <br />
+                        <br/>
+                        <div class="text-center">
+                        @using (Html.BeginForm("Open", "Auctions", new { id = item.Id }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <input type="submit" value="Open" class="btn btn-info" />
+                        }
+                        </div>
+
+                    }
+
+                </div>
+
+
+            if (numItems % 3 == 2)
+            {
+                @:</div>
+                    }
+
+            numItems++;
+        }
+
+        @if (numItems % 3 != 0)
+        {
+            @:</div>
+                }
+
+
+
+
+        <!---->
+    </div>
+</div>
+
+Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+@Html.PagedListPager(Model, page => Url.Action("Index",
+    new { page, currentSearch = ViewBag.CurrentSearch, currentSearchType = ViewBag.CurrentSearchType, currentStatus = ViewBag.CurrentStatus, currentMin = ViewBag.CurrentMin, currentMax = ViewBag.CurrentMax }))
+
+
+
+
